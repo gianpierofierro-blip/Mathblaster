@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 MATH BLASTER ESPACIAL 🚀</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka+One&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fredoka One', cursive;
+            overflow: hidden;
+            background: #000;
+            color: white;
+            user-select: none;
+        }
+
+        /* Canvas de fondo espacial */
+        #spaceCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Pantallas */
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Título animado */
+        .game-title {
+            font-family: 'Bangers', cursive;
+            font-size: 5rem;
+            text-align: center;
+            background: linear-gradient(45deg, #ff006e, #8338ec, #3a86ff, #06ffa5, #ffbe0b);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite, titleBounce 2s ease infinite;
+            text-shadow: none;
+            filter: drop-shadow(0 0 20px rgba(255,0,110,0.5));
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes titleBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.05); }
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #00d9ff;
+            text-shadow: 0 0 10px #00d9ff;
+            margin-bottom: 30px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; text-shadow: 0 0 20px #00d9ff, 0 0 40px #00d9ff; }
+        }
+
+        /* Cohete del título */
+        .title-rocket {
+            font-size: 4rem;
+            position: absolute;
+            animation: flyAround 8s linear infinite;
+            filter: drop-shadow(0 0 15px #ff006e);
+            z-index: 5;
+        }
+
+        @keyframes flyAround {
+            0% { transform: translate(-200px, 100px) rotate(45deg); }
+            25% { transform: translate(200px, -100px) rotate(45deg); }
+            50% { transform: translate(200px, 100px) rotate(225deg); }
+            75% { transform: translate(-200px, -100px) rotate(225deg); }
+            100% { transform: translate(-200px, 100px) rotate(45deg); }
+        }
+
+        /* Botones estilo arcade */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 220px);
+            gap: 25px;
+            margin: 20px;
+            perspective: 1000px;
+        }
+
+        .arcade-btn {
+            width: 220px;
+            height: 140px;
+            border: none;
+            border-radius: 20px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.4rem;
+            color: white;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .arcade-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .arcade-btn:hover::before {
+            animation: shine 0.5s ease-in-out;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+        }
+
+        .arcade-btn:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .arcade-btn:active {
+            transform: translateY(-5px) scale(0.98);
+        }
+
+        .btn-suma { background: linear-gradient(135deg, #ff006e, #8338ec); }
+        .btn-resta { background: linear-gradient(135deg, #3a86ff, #06ffa5); }
+        .btn-multi { background: linear-gradient(135deg, #ffbe0b, #fb5607); }
+        .btn-div { background: linear-gradient(135deg, #8338ec, #3a86ff); }
+        .btn-mixto { 
+            grid-column: span 2;
+            width: 470px;
+            background: linear-gradient(135deg, #ff006e, #ffbe0b, #06ffa5, #3a86ff);
+            background-size: 300% 300%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        .btn-icon {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Grid de niveles */
+        .level-container {
+            background: rgba(0, 20, 40, 0.8);
+            border-radius: 30px;
+            padding: 40px;
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 50px rgba(0, 217, 255, 0.2);
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 100px);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .level-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            border: 3px solid;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .level-btn:hover:not(.locked) {
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 0 30px currentColor;
+        }
+
+        .level-btn.available {
+            background: linear-gradient(135deg, #00d9ff, #0066ff);
+            border-color: #00d9ff;
+            animation: pulse 2s infinite;
+        }
+
+        .level-btn.locked {
+            background: rgba(50, 50, 50, 0.8);
+            border-color: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .level-btn.completed {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-color: #ffd700;
+            animation: starPulse 2s infinite;
+        }
+
+        @keyframes starPulse {
+            0%, 100% { box-shadow: 0 0 10px #ffd700; }
+            50% { box-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700; }
+        }
+
+        .level-stars {
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        /* HUD del juego */
+        .game-hud {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            background: rgba(0, 10, 30, 0.9);
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: 2px solid rgba(0, 217, 255, 0.5);
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.3);
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .hud-item {
+            text-align: center;
+        }
+
+        .hud-label {
+            font-size: 0.8rem;
+            color: #00d9ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .hud-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .hud-hearts {
+            font-size: 1.5rem;
+        }
+
+        /* Área de juego */
+        .game-area {
+            margin-top: 120px;
+            text-align: center;
+            position: relative;
+        }
+
+        .problem-card {
+            background: linear-gradient(135deg, rgba(0, 50, 100, 0.9), rgba(0, 20, 60, 0.9));
+            border: 3px solid #00d9ff;
+            border-radius: 30px;
+            padding: 40px 60px;
+            display: inline-block;
+            box-shadow: 0 0 50px rgba(0, 217, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .problem-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00d9ff, #ff006e, #00d9ff);
+            border-radius: 30px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .problem-card.active::before {
+            opacity: 1;
+            animation: borderRotate 3s linear infinite;
+        }
+
+        @keyframes borderRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .problem-text {
+            font-family: 'Bangers', cursive;
+            font-size: 5rem;
+            letter-spacing: 5px;
+            text-shadow: 0 0 20px rgba(0, 217, 255, 0.8);
+        }
+
+        .answer-display {
+            font-size: 3rem;
+            margin: 20px 0;
+            min-height: 60px;
+            color: #ffd700;
+            text-shadow: 0 0 20px #ffd700;
+        }
+
+        /* Teclado numérico futurista */
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 90px);
+            gap: 15px;
+            margin: 30px auto;
+            perspective: 500px;
+        }
+
+        .num-key {
+            width: 90px;
+            height: 90px;
+            border: 2px solid rgba(0, 217, 255, 0.5);
+            border-radius: 20px;
+            background: rgba(0, 50, 100, 0.6);
+            color: white;
+            font-family: 'Fredoka One', cursive;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.1s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .num-key:hover {
+            background: rgba(0, 217, 255, 0.3);
+            transform: translateZ(20px);
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
+        }
+
+        .num-key:active {
+            transform: translateZ(5px) scale(0.95);
+        }
+
+        .num-key.wide {
+            grid-column: span 2;
+            width: 195px;
+        }
+
+        .num-key.enter {
+            background: linear-gradient(135deg, #00d9ff, #0066ff);
+            border-color: #00d9ff;
+        }
+
+        .num-key.clear {
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            border-color: #ff006e;
+        }
+
+        /* Partículas de respuesta */
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Pantalla de victoria */
+        .victory-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .victory-overlay.active {
+            display: flex;
+        }
+
+        .victory-title {
+            font-family: 'Bangers', cursive;
+            font-size: 6rem;
+            background: linear-gradient(45deg, #ffd700, #ff8c00, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: victoryBounce 1s ease infinite;
+            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8));
+        }
+
+        @keyframes victoryBounce {
+            0%, 100% { transform: scale(1) rotate(-3deg); }
+            50% { transform: scale(1.1) rotate(3deg); }
+        }
+
+        .victory-rocket {
+            font-size: 8rem;
+            animation: victoryFly 2s ease-out forwards;
+            filter: drop-shadow(0 0 50px #00d9ff);
+        }
+
+        @keyframes victoryFly {
+            0% { transform: translateY(200px) scale(0.5) rotate(-20deg); opacity: 0; }
+            30% { transform: translateY(0) scale(1.2) rotate(10deg); opacity: 1; }
+            100% { transform: translateY(-500px) scale(0.8) rotate(0deg); opacity: 0; }
+        }
+
+        .confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Alien guide */
+        .alien-guide {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 4rem;
+            animation: alienFloat 3s ease-in-out infinite;
+            cursor: pointer;
+            z-index: 50;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 100, 0.5));
+        }
+
+        @keyframes alienFloat {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .speech-bubble {
+            position: fixed;
+            bottom: 100px;
+            right: 100px;
+            background: white;
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-size: 1rem;
+            max-width: 250px;
+            display: none;
+            z-index: 51;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 30px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            transform: rotate(45deg);
+        }
+
+        .speech-bubble.active {
+            display: block;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Barra de progreso orbital */
+        .orbit-progress {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            margin: 20px auto;
+        }
+
+        .orbit-ring {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .orbit-fill {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            width: calc(100% + 16px);
+            height: calc(100% + 16px);
+            border-radius: 50%;
+            border: 8px solid transparent;
+            border-top-color: #00d9ff;
+            border-right-color: #00d9ff;
+            transition: all 0.5s;
+            transform: rotate(-45deg);
+        }
+
+        .orbit-rocket {
+            position: absolute;
+            font-size: 2rem;
+            transition: all 0.5s;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .game-title { font-size: 3rem; }
+            .btn-grid { grid-template-columns: 1fr; }
+            .arcade-btn, .btn-mixto { width: 90vw; grid-column: span 1; }
+            .level-grid { grid-template-columns: repeat(3, 80px); }
+            .level-btn { width: 80px; height: 80px; }
+            .problem-text { font-size: 3rem; }
+            .numpad { grid-template-columns: repeat(3, 70px); }
+            .num-key { width: 70px; height: 70px; font-size: 1.5rem; }
+            .num-key.wide { width: 155px; }
+            .game-hud { gap: 15px; padding: 10px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas de fondo espacial animado -->
+    <canvas id="spaceCanvas"></canvas>
+
+    <!-- Canvas para partículas -->
+    <canvas id="particleCanvas" class="confetti-canvas"></canvas>
+
+    <!-- Pantalla de inicio -->
+    <div id="startScreen" class="screen active">
+        <div class="title-rocket">🚀</div>
+        <h1 class="game-title">MATH BLASTER</h1>
+        <p class="subtitle">¡Explora el espacio mientras domino las matemáticas!</p>
+        
+        <div class="btn-grid">
+            <button class="arcade-btn btn-suma" onclick="selectOperation('suma')">
+                <span class="btn-icon">➕</span>
+                SUMA
+            </button>
+            <button class="arcade-btn btn-resta" onclick="selectOperation('resta')">
+                <span class="btn-icon">➖</span>
+                RESTA
+            </button>
+            <button class="arcade-btn btn-multi" onclick="selectOperation('multiplicacion')">
+                <span class="btn-icon">✖️</span>
+                MULTIPLICAR
+            </button>
+            <button class="arcade-btn btn-div" onclick="selectOperation('division')">
+                <span class="btn-icon">➗</span>
+                DIVIDIR
+            </button>
+            <button class="arcade-btn btn-mixto" onclick="selectOperation('mixto')">
+                <span class="btn-icon">🌟</span>
+                MODO GALÁCTICO MIXTO
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla de niveles -->
+    <div id="levelScreen" class="screen">
+        <div class="level-container">
+            <h2 id="levelTitle" style="font-family: 'Bangers'; font-size: 3rem; margin-bottom: 10px; text-align: center;">
+                Selecciona tu Misión
+            </h2>
+            <p id="levelDesc" style="text-align: center; color: #00d9ff; margin-bottom: 20px;"></p>
+            
+            <div class="level-grid" id="levelGrid"></div>
+            
+            <button class="arcade-btn btn-resta" onclick="backToStart()" style="width: 200px; height: 60px; margin: 20px auto; display: block;">
+                ← VOLVER
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla de juego -->
+    <div id="gameScreen" class="screen">
+        <div class="game-hud">
+            <div class="hud-item">
+                <div class="hud-label">Nivel</div>
+                <div class="hud-value" id="hudLevel">1</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Puntos</div>
+                <div class="hud-value" id="hudScore">0</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Vidas</div>
+                <div class="hud-hearts" id="hudLives">❤️❤️❤️</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Progreso</div>
+                <div class="hud-value" id="hudProgress">0/10</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="orbit-progress" id="orbitProgress" style="display: none;">
+                <div class="orbit-ring">
+                    <div class="orbit-fill" id="orbitFill"></div>
+                </div>
+                <div class="orbit-rocket" id="orbitRocket">🚀</div>
+            </div>
+
+            <div class="problem-card" id="problemCard">
+                <div class="problem-text" id="problemText">2 + 2 = ?</div>
+            </div>
+
+            <div class="answer-display" id="answerDisplay">?</div>
+
+            <div class="numpad">
+                <button class="num-key" onclick="pressNum('7')">7</button>
+                <button class="num-key" onclick="pressNum('8')">8</button>
+                <button class="num-key" onclick="pressNum('9')">9</button>
+                <button class="num-key" onclick="pressNum('4')">4</button>
+                <button class="num-key" onclick="pressNum('5')">5</button>
+                <button class="num-key" onclick="pressNum('6')">6</button>
+                <button class="num-key" onclick="pressNum('1')">1</button>
+                <button class="num-key" onclick="pressNum('2')">2</button>
+                <button class="num-key" onclick="pressNum('3')">3</button>
+                <button class="num-key clear" onclick="clearAnswer()">🗑️</button>
+                <button class="num-key" onclick="pressNum('0')">0</button>
+                <button class="num-key enter wide" onclick="checkAnswer()">🚀</button>
+            </div>
+        </div>
+
+        <button class="arcade-btn btn-resta" onclick="backToLevels()" style="width: 180px; height: 50px; margin-top: 20px; font-size: 1rem;">
+            ABANDONAR MISIÓN
+        </button>
+    </div>
+
+    <!-- Pantalla de victoria -->
+    <div id="victoryScreen" class="victory-overlay">
+        <div class="victory-rocket" id="victoryRocket">🚀</div>
+        <div class="victory-title">¡MISIÓN CUMPLIDA!</div>
+        <div style="font-size: 1.5rem; margin: 20px; text-align: center;">
+            <p>🌟 Puntuación: <span id="victoryScore" style="color: #ffd700; font-size: 2rem;">0</span></p>
+            <p>❤️ Vidas: <span id="victoryLives">3</span></p>
+            <p>🎯 Precisión: <span id="victoryAccuracy">100%</span></p>
+        </div>
+        <button class="arcade-btn btn-mixto" onclick="nextLevel()" id="nextLevelBtn" style="width: 250px; height: 70px; margin: 10px;">
+            SIGUIENTE GALAXIA →
+        </button>
+        <button class="arcade-btn btn-resta" onclick="backToLevels()" style="width: 250px; height: 70px; margin: 10px;">
+            MAPA ESTELAR
+        </button>
+    </div>
+
+    <!-- Alien guía -->
+    <div class="alien-guide" id="alienGuide" onclick="alienSpeak()">👾</div>
+    <div class="speech-bubble" id="speechBubble">¡Hola pequeño astronauta! ¿Listo para despegar? 🚀</div>
+
+    <script>
+        // ============ SISTEMA DE CANVAS ESPACIAL ============
+        const canvas = document.getElementById('spaceCanvas');
+        const ctx = canvas.getContext('2d');
+        const pCanvas = document.getElementById('particleCanvas');
+        const pCtx = pCanvas.getContext('2d');
+
+        let width, height;
+        let stars = [];
+        let planets = [];
+        let asteroids = [];
+        let shootingStars = [];
+        let particles = [];
+        let rockets = [];
+
+        function resize() {
+            width = canvas.width = pCanvas.width = window.innerWidth;
+            height = canvas.height = pCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Estrellas con parallax
+        class Star {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 3 + 0.5;
+                this.speed = this.size * 0.2;
+                this.brightness = Math.random();
+                this.twinkleSpeed = Math.random() * 0.02 + 0.01;
+            }
+            update() {
+                this.y += this.speed;
+                this.brightness += this.twinkleSpeed;
+                if (this.brightness > 1 || this.brightness < 0) this.twinkleSpeed *= -1;
+                if (this.y > height) this.reset();
+            }
+            draw() {
+                ctx.globalAlpha = Math.abs(this.brightness);
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Glow para estrellas grandes
+                if (this.size > 2) {
+                    ctx.globalAlpha = Math.abs(this.brightness) * 0.3;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // Planetas orbitando
+        class Planet {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.radius = Math.random() * 40 + 20;
+                this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+                this.rings = Math.random() > 0.5;
+                this.moons = Math.floor(Math.random() * 3);
+                this.orbitAngle = Math.random() * Math.PI * 2;
+                this.orbitSpeed = (Math.random() - 0.5) * 0.002;
+                this.orbitRadius = Math.random() * 100 + 50;
+                this.centerX = this.x;
+                this.centerY = this.y;
+            }
+            update() {
+                this.orbitAngle += this.orbitSpeed;
+                this.x = this.centerX + Math.cos(this.orbitAngle) * this.orbitRadius;
+                this.y = this.centerY + Math.sin(this.orbitAngle) * this.orbitRadius * 0.3;
+            }
+            draw() {
+                // Planeta
+                const gradient = ctx.createRadialGradient(
+                    this.x - this.radius * 0.3, this.y - this.radius * 0.3, 0,
+                    this.x, this.y, this.radius
+                );
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(1, 'rgba(0,0,0,0.8)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Anillos
+                if (this.rings) {
+                    ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.ellipse(this.x, this.y, this.radius * 1.8, this.radius * 0.4, this.orbitAngle * 0.5, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                // Glow
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 30;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Asteroides flotantes
+        class Asteroid {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 15 + 5;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.rotation = 0;
+                this.rotSpeed = (Math.random() - 0.5) * 0.05;
+                this.vertices = [];
+                const sides = Math.floor(Math.random() * 5) + 5;
+                for (let i = 0; i < sides; i++) {
+                    const angle = (i / sides) * Math.PI * 2;
+                    const r = this.size * (0.7 + Math.random() * 0.3);
+                    this.vertices.push({x: Math.cos(angle) * r, y: Math.sin(angle) * r});
+                }
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.rotation += this.rotSpeed;
+                
+                if (this.x < -50) this.x = width + 50;
+                if (this.x > width + 50) this.x = -50;
+                if (this.y < -50) this.y = height + 50;
+                if (this.y > height + 50) this.y = -50;
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.fillStyle = 'rgba(100, 100, 120, 0.6)';
+                ctx.strokeStyle = 'rgba(150, 150, 170, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                this.vertices.forEach((v, i) => {
+                    if (i === 0) ctx.moveTo(v.x, v.y);
+                    else ctx.lineTo(v.x, v.y);
+                });
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // Estrellas fugaces
+        class ShootingStar {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height * 0.5;
+                this.length = Math.random() * 80 + 20;
+                this.speed = Math.random() * 10 + 5;
+                this.angle = Math.random() * Math.PI * 0.5 + Math.PI * 0.25;
+                this.life = 0;
+                this.maxLife = Math.random() * 60 + 30;
+                this.active = false;
+            }
+            update() {
+                if (!this.active) {
+                    if (Math.random() < 0.005) this.active = true;
+                    return;
+                }
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.life++;
+                if (this.life > this.maxLife) this.reset();
+            }
+            draw() {
+                if (!this.active) return;
+                const alpha = 1 - (this.life / this.maxLife);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(
+                    this.x - Math.cos(this.angle) * this.length,
+                    this.y - Math.sin(this.angle) * this.length
+                );
+                ctx.stroke();
+                
+                // Glow
+                ctx.shadowColor = '#00d9ff';
+                ctx.shadowBlur = 10;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Cohetes decorativos
+        class Rocket {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = height + 50;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = -(Math.random() * 3 + 2);
+                this.size = Math.random() * 20 + 15;
+                this.trail = [];
+                this.active = true;
+            }
+            update() {
+                if (!this.active) {
+                    if (Math.random() < 0.002) this.reset();
+                    return;
+                }
+                this.x += this.vx;
+                this.y += this.vy;
+                this.trail.push({x: this.x, y: this.y, life: 20});
+                this.trail = this.trail.filter(t => --t.life > 0);
+                
+                if (this.y < -100) this.active = false;
+            }
+            draw() {
+                if (!this.active) return;
+                
+                // Trail de fuego
+                this.trail.forEach(t => {
+                    const alpha = t.life / 20;
+                    ctx.fillStyle = `rgba(255, ${Math.floor(100 + t.life * 7)}, 0, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y + 10, t.life * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                
+                // Cohete emoji
+                ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText('🚀', this.x, this.y);
+            }
+        }
+
+        // Partículas de explosión
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 15;
+                this.vy = (Math.random() - 0.5) * 15;
+                this.life = 60;
+                this.maxLife = 60;
+                this.color = color;
+                this.size = Math.random() * 8 + 2;
+                this.gravity = 0.2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.life--;
+                this.size *= 0.98;
+            }
+            draw() {
+                const alpha = this.life / this.maxLife;
+                pCtx.globalAlpha = alpha;
+                pCtx.fillStyle = this.color;
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                pCtx.fill();
+                
+                // Glow
+                pCtx.shadowColor = this.color;
+                pCtx.shadowBlur = 10;
+                pCtx.fill();
+                pCtx.shadowBlur = 0;
+            }
+        }
+
+        // Inicializar objetos
+        function initSpace() {
+            stars = Array(200).fill().map(() => new Star());
+            planets = Array(3).fill().map(() => new Planet());
+            asteroids = Array(8).fill().map(() => new Asteroid());
+            shootingStars = Array(3).fill().map(() => new ShootingStar());
+            rockets = Array(2).fill().map(() => new Rocket());
+        }
+        initSpace();
+
+        // Loop de animación
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Fondo degradado espacial
+            const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+            bgGradient.addColorStop(0, '#000011');
+            bgGradient.addColorStop(0.5, '#0a0e27');
+            bgGradient.addColorStop(1, '#1a0b2e');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, width, height);
+            
+            stars.forEach(s => { s.update(); s.draw(); });
+            planets.forEach(p => { p.update(); p.draw(); });
+            asteroids.forEach(a => { a.update(); a.draw(); });
+            shootingStars.forEach(s => { s.update(); s.draw(); });
+            rockets.forEach(r => { r.update(); r.draw(); });
+            
+            // Limpiar partículas
+            pCtx.clearRect(0, 0, width, height);
+            particles = particles.filter(p => {
+                p.update();
+                p.draw();
+                return p.life > 0;
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Explosión de partículas
+        function explode(x, y, color = '#00d9ff', count = 30) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        // Confeti de victoria
+        function victoryConfetti() {
+            const colors = ['#ff006e', '#8338ec', '#3a86ff', '#06ffa5', '#ffbe0b', '#ffd700'];
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * width;
+                    const y = -20;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const p = new Particle(x, y, color);
+                    p.vy = Math.random() * 5 + 2;
+                    p.vx = (Math.random() - 0.5) * 4;
+                    p.gravity = 0.1;
+                    particles.push(p);
+                }, i * 20);
+            }
+        }
+
+        // ============ LÓGICA DEL JUEGO ============
+        let gameState = {
+            operation: '',
+            level: 1,
+            score: 0,
+            lives: 3,
+            currentProblem: null,
+            answer: '',
+            problemsSolved: 0,
+            totalProblems: 10,
+            completedLevels: {
+                suma: [], resta: [], multiplicacion: [], division: [], mixto: []
+            },
+            attempts: 0
+        };
+
+        const opNames = {
+            suma: 'SUMA', resta: 'RESTA', multiplicacion: 'MULTIPLICACIÓN', 
+            division: 'DIVISIÓN', mixto: 'MODO GALÁCTICO'
+        };
+
+        const opSymbols = {
+            suma: '+', resta: '-', multiplicacion: '×', division: '÷'
+        };
+
+        // Navegación
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function selectOperation(op) {
+            gameState.operation = op;
+            document.getElementById('levelTitle').textContent = `NIVELES DE ${opNames[op]}`;
+            
+            let desc = '';
+            if (op === 'multiplicacion') {
+                desc = '🚀 Nivel 1 = Tabla del 2 | Nivel 2 = Tabla del 3 | ... | Nivel 9 = Tabla del 10';
+            } else if (op === 'division') {
+                desc = '🚀 Nivel 1 = Dividir entre 2 | Nivel 2 = Entre 3 | ... | Nivel 9 = Entre 10';
+            } else if (op === 'mixto') {
+                desc = '🌟 ¡Todas las operaciones mezcladas! ¿Estás listo para el desafío?';
+            } else {
+                desc = '🚀 10 niveles de dificultad progresiva ¡Despega hacia el conocimiento!';
+            }
+            document.getElementById('levelDesc').textContent = desc;
+            
+            renderLevels();
+            showScreen('levelScreen');
+        }
+
+        function renderLevels() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            const completed = gameState.completedLevels[gameState.operation];
+            
+            for (let i = 1; i <= 10; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'level-btn';
+                
+                let label = i;
+                let sublabel = '';
+                
+                if (gameState.operation === 'multiplicacion' && i <= 9) {
+                    sublabel = `×${i+1}`;
+                } else if (gameState.operation === 'division' && i <= 9) {
+                    sublabel = `÷${i+1}`;
+                }
+                
+                if (i > 1 && !completed.includes(i-1)) {
+                    btn.classList.add('locked');
+                    btn.innerHTML = `${i}<br>🔒`;
+                } else {
+                    btn.classList.add('available');
+                    if (completed.includes(i)) {
+                        btn.classList.add('completed');
+                        btn.innerHTML = `${i}<br><span class="level-stars">⭐⭐⭐</span>`;
+                    } else {
+                        btn.innerHTML = `${i}<br><small style="font-size:0.7rem">${sublabel}</small>`;
+                    }
+                    btn.onclick = () => startLevel(i);
+                }
+                grid.appendChild(btn);
+            }
+        }
+
+        function startLevel(level) {
+            gameState.level = level;
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.problemsSolved = 0;
+            gameState.answer = '';
+            gameState.attempts = 0;
+            
+            updateHUD();
+            generateProblem();
+            showScreen('gameScreen');
+            
+            // Animación de entrada
+            document.getElementById('problemCard').classList.add('active');
+            alienSpeak(`¡Nivel ${level}! ¡Tú puedes! 🚀`);
+        }
+
+        function generateProblem() {
+            const op = gameState.operation;
+            const level = gameState.level;
+            let n1, n2, ans, sym;
+            
+            if (op === 'suma') {
+                const max = 5 + level * 5;
+                n1 = Math.floor(Math.random() * max) + 1;
+                n2 = Math.floor(Math.random() * max) + 1;
+                ans = n1 + n2;
+                sym = '+';
+            } else if (op === 'resta') {
+                const max = 5 + level * 5;
+                n1 = Math.floor(Math.random() * max) + 5;
+                n2 = Math.floor(Math.random() * n1) + 1;
+                ans = n1 - n2;
+                sym = '-';
+            } else if (op === 'multiplicacion') {
+                const tabla = level <= 9 ? level + 1 : Math.floor(Math.random() * 9) + 2;
+                n1 = tabla;
+                n2 = Math.floor(Math.random() * 10) + 1;
+                ans = n1 * n2;
+                sym = '×';
+            } else if (op === 'division') {
+                const divisor = level <= 9 ? level + 1 : Math.floor(Math.random() * 9) + 2;
+                ans = Math.floor(Math.random() * 10) + 1;
+                n1 = divisor * ans;
+                n2 = divisor;
+                sym = '÷';
+            } else {
+                const ops = ['suma', 'resta', 'multiplicacion', 'division'];
+                const rop = ops[Math.floor(Math.random() * ops.length)];
+                // Recursivamente generar con operación random pero sin cambiar estado
+                const temp = gameState.operation;
+                gameState.operation = rop;
+                generateProblem();
+                gameState.operation = temp;
+                return;
+            }
+            
+            gameState.currentProblem = { n1, n2, ans, sym };
+            document.getElementById('problemText').textContent = `${n1} ${sym} ${n2} = ?`;
+            document.getElementById('answerDisplay').textContent = '?';
+            gameState.answer = '';
+        }
+
+        function pressNum(num) {
+            if (gameState.answer.length < 4) {
+                gameState.answer += num;
+                document.getElementById('answerDisplay').textContent = gameState.answer;
+                
+                // Efecto visual en el botón
+                const rect = document.getElementById('answerDisplay').getBoundingClientRect();
+                explode(rect.left + rect.width/2, rect.top, '#00d9ff', 5);
+            }
+        }
+
+        function clearAnswer() {
+            gameState.answer = '';
+            document.getElementById('answerDisplay').textContent = '?';
+        }
+
+        function checkAnswer() {
+            const userAns = parseInt(gameState.answer);
+            const correct = userAns === gameState.currentProblem.ans;
+            const feedback = document.getElementById('answerDisplay');
+            
+            gameState.attempts++;
+            
+            if (correct) {
+                // ¡CORRECTO!
+                feedback.textContent = '✅ ' + gameState.answer;
+                feedback.style.color = '#06ffa5';
+                
+                // Explosión de celebración
+                const rect = feedback.getBoundingClientRect();
+                explode(rect.left + rect.width/2, rect.top, '#06ffa5', 50);
+                explode(rect.left + rect.width/2, rect.top, '#ffd700', 30);
+                
+                // Sonido visual (pulsar pantalla)
+                document.body.style.animation = 'none';
+                document.body.offsetHeight; // trigger reflow
+                document.body.style.animation = 'pulse 0.3s';
+                
+                gameState.score += 100;
+                gameState.problemsSolved++;
+                updateHUD();
+                
+                alienSpeak(['¡Excelente! 🎉', '¡Genial! 🚀', '¡Eres un astronauta! ⭐', '¡Perfecto! 🌟'][Math.floor(Math.random()*4)]);
+                
+                if (gameState.problemsSolved >= gameState.totalProblems) {
+                    setTimeout(levelComplete, 1500);
+                } else {
+                    setTimeout(() => {
+                        feedback.style.color = '#ffd700';
+                        generateProblem();
+                    }, 1200);
+                }
+            } else {
+                // INCORRECTO
+                feedback.textContent = '❌ ' + gameState.answer;
+                feedback.style.color = '#ff006e';
+                
+                const rect = feedback.getBoundingClientRect();
+                explode(rect.left + rect.width/2, rect.top, '#ff006e', 20);
+                
+                // Shake effect
+                const card = document.getElementById('problemCard');
+                card.style.animation = 'shake 0.5s';
+                setTimeout(() => card.style.animation = '', 500);
+                
+                gameState.lives--;
+                updateHUD();
+                
+                alienSpeak(['¡Casi! Inténtalo de nuevo 💪', 'No te rindas, astronauta 🚀', '¡Tú puedes! Piensa bien 🤔'][Math.floor(Math.random()*3)]);
+                
+                if (gameState.lives <= 0) {
+                    setTimeout(() => {
+                        alert('💥 ¡Tu cohete necesita reparaciones! Vuelve a intentarlo.');
+                        backToLevels();
+                    }, 1000);
+                } else {
+                    setTimeout(() => {
+                        feedback.style.color = '#ffd700';
+                        gameState.answer = '';
+                        feedback.textContent = '?';
+                    }, 1500);
+                }
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('hudLevel').textContent = gameState.level;
+            document.getElementById('hudScore').textContent = gameState.score;
+            document.getElementById('hudLives').textContent = '❤️'.repeat(gameState.lives) + '🖤'.repeat(3 - gameState.lives);
+            document.getElementById('hudProgress').textContent = `${gameState.problemsSolved}/${gameState.totalProblems}`;
+            
+            // Actualizar barra orbital
+            const progress = (gameState.problemsSolved / gameState.totalProblems) * 360;
+            document.getElementById('orbitFill').style.transform = `rotate(${-45 + progress}deg)`;
+        }
+
+        function levelComplete() {
+            victoryConfetti();
+            
+            // Guardar progreso
+            if (!gameState.completedLevels[gameState.operation].includes(gameState.level)) {
+                gameState.completedLevels[gameState.operation].push(gameState.level);
+            }
+            
+            const accuracy = Math.round((gameState.totalProblems / gameState.attempts) * 100);
+            
+            document.getElementById('victoryScore').textContent = gameState.score;
+            document.getElementById('victoryLives').textContent = gameState.lives;
+            document.getElementById('victoryAccuracy').textContent = accuracy + '%';
+            
+            document.getElementById('nextLevelBtn').style.display = gameState.level >= 10 ? 'none' : 'inline-block';
+            
+            document.getElementById('victoryScreen').classList.add('active');
+            
+            alienSpeak('¡MISIÓN CUMPLIDA! ¡Eres el mejor astronauta! 🏆');
+        }
+
+        function nextLevel() {
+            document.getElementById('victoryScreen').classList.remove('active');
+            startLevel(gameState.level + 1);
+        }
+
+        function backToLevels() {
+            document.getElementById('victoryScreen').classList.remove('active');
+            selectOperation(gameState.operation);
+        }
+
+        function backToStart() {
+            showScreen('startScreen');
+        }
+
+        // Alien interactivo
+        const alienMessages = [
+            '¡Hola! Soy Zork, tu guía espacial 👾',
+            '¡Responde correctamente y verás fuegos artificiales! 🎆',
+            'Las matemáticas son el lenguaje del universo 🌌',
+            '¡Cada nivel te lleva más lejos en el espacio! 🚀',
+            '¿Sabías que los astronautas usan matemáticas todos los días? 🛸'
+        ];
+        
+        function alienSpeak(msg) {
+            const bubble = document.getElementById('speechBubble');
+            if (msg) {
+                bubble.textContent = msg;
+            } else {
+                bubble.textContent = alienMessages[Math.floor(Math.random() * alienMessages.length)];
+            }
+            bubble.classList.add('active');
+            setTimeout(() => bubble.classList.remove('active'), 3000);
+        }
+
+        // Teclado físico
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('gameScreen').classList.contains('active')) return;
+            
+            if (e.key >= '0' && e.key <= '9') pressNum(e.key);
+            else if (e.key === 'Enter') checkAnswer();
+            else if (e.key === 'Backspace' || e.key === 'Escape') clearAnswer();
+        });
+
+        // Animación CSS adicional
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                20% { transform: translateX(-15px) rotate(-5deg); }
+                40% { transform: translateX(15px) rotate(5deg); }
+                60% { transform: translateX(-10px); }
+                80% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
